@@ -12,15 +12,19 @@ import re
 
 #关闭https证书验证警告
 requests.packages.urllib3.disable_warnings()
-# 12306的城市名和城市代码js文件url
+
+# 12306的城市名和城市代码js文件的url地址
 url = 'https://kyfw.12306.cn/otn/resources/js/framework/station_name.js?station_version=1.9018'
 r = requests.get(url,verify=False)
 pattern = u'([\u4e00-\u9fa5]+)\|([A-Z]+)'
 result = re.findall(pattern,r.text)
 station = dict(result)
-# 将站点词典 保存到 csv 文件中，
+
+# 将站点词典 逐条解析后，逐条保存到 csv 文件中，
 with open("station.csv","w") as fhandler:
-    fhandler.write('站点名称NAME' + ',' + '站点编码ID' + '\n')
+    fhandler.write('站点名称NAME' + ',' + '站点编码CODE' + '\n')
     for stat in station.items():
         fhandler.write(stat[0] + ',' + stat[1] + '\n')
+
+# 最后关闭数据文件，写文件结尾部分
 fhandler.closed
