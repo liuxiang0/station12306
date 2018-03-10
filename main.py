@@ -10,7 +10,7 @@ import time
 import os
 import settings
 import transCoordinateSystem
-# import sys
+import sys
 import math
 
 global i_qqlimit    #one QQ crawl maxium cities 

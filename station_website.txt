@@ -1,0 +1,7 @@
+火车车次及始发和到站以及编码：
+https://kyfw.12306.cn/otn/resources/js/query/train_list.js?scriptVersion=1.0
+
+
+火车站点名称及其编码：
+https://kyfw.12306.cn/otn/resources/js/framework/station_name.js?station_version=1.9002
+
