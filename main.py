@@ -13,14 +13,14 @@ import transCoordinateSystem
 # import sys
 import math
 
-global i_qqlimit    #one QQ crawl maxium cities 
+global i_qqlimit    #one QQ crawl maxium cities
 global qq_number_sides  # QQ list
 global point_total      # population at the city
 #global spyder_list       save city coordinate and city name
 global my_working_path  # my working directory
-#global run_time          start running time 
+#global run_time          start running time
 #global station_output_fname  output data file name appending running time
-#global file_output       output data file handler 
+#global file_output       output data file handler
 
 i_qqlimit = 1
 qq_number_sides = 0
@@ -40,24 +40,25 @@ def Crawl_GStation(spyder_list):
         global i_qqlimit
         global qq_number_sides
         global point_total
-         
+
 
         cookie = get_cookie(qq_number_sides)
-        
+
         run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
         station_output_fname = my_working_path +'\\sp_'+run_time+'.csv'
         file_output = open(station_output_fname, 'w')  # open data file for writing, error for encoding = "utf-8"
-        file_output.write('站名,相对人数,时间\n')   # writing first line to output file 
-        path_file = my_working_path + '\\data_' + run_time 
+        file_output.write('站名,相对人数,时间\n')   # writing first line to output file
+        path_file = my_working_path + '\\data_' + run_time
+
         if not os.path.exists(path_file):
             os.mkdir(path_file)
-        
+
         path_file = path_file + '\\'
-            
+
         for item in spyder_list:
-            
+
             #print("此轮抓取开始")
-            
+
             """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
             if i_qqlimit % settings.fre == 0:
                 cookie = get_cookie(qq_number_sides)
@@ -70,7 +71,7 @@ def Crawl_GStation(spyder_list):
             params = spyder_params(item)
             time_now = time.time()
             time_now_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time_now))
-            
+
             try:
                 text = spyder(cookie, params)
                 save(text, time_now_str, file_name= path_file + place + time_now_str+".csv")
@@ -82,13 +83,13 @@ def Crawl_GStation(spyder_list):
                 save(text, time_now_str, file_name= path_file + place + time_now_str+".csv")
             # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
             i_qqlimit += 1
-            
+
             #print("此轮抓取完成")
-            
+
             file_output.write(place+ ','+ str(point_total)+ ','+ time_now_str +'\n')
             point_total = 0
-        
-        file_output.close()   # close output file 
+
+        file_output.close()   # close output file
         break
 
 
@@ -146,13 +147,13 @@ def spyder_params(item):
                 "lat": lat,
                 "lng": lng,
                 "_token": ""}
-    
+
     return params
 
 def save(text, time_now,file_name):
     """将抓取下来的流数据处理保存到文本文件"""
     global point_total
-    
+
     #判断文件是否存在，若不存在则创建文件并写入头
     try:
         with open(file_name, mode='r') as f:
@@ -171,7 +172,7 @@ def save(text, time_now,file_name):
                 i['count'] = i['count']/min_count
                 #此处的算法在宜出行网页后台的js可以找到，
                 #文件路径是http://c.easygo.qq.com/eg_toc/js/map-55f0ea7694.bundle.js
-                gcj_lng = 1e-6 * (250.0 * i['grid_x'] + 125.0) 
+                gcj_lng = 1e-6 * (250.0 * i['grid_x'] + 125.0)
                 gcj_lat = 1e-6 * (250.0 * i['grid_y'] + 125.0)
                 lng, lat = transCoordinateSystem.gcj02_to_wgs84(gcj_lng, gcj_lat)
                 point_total += i['count']
@@ -179,7 +180,7 @@ def save(text, time_now,file_name):
         except IndexError as e:
             #print("Save1 IndexError: 此区域没有点信息",)  # Test is ok
             pass
-            
+
         except TypeError as e:
             print("save2 TypeError: ", node_list)
             """
@@ -193,7 +194,7 @@ def stationArea(center):
     """
     input: center (lng, lat)  --->tuple or list
     output: center_area(lng_min,lat_min,lng_max,lat_max) --->  RectangleArea
-                        
+
     """
     #import math
     #中心经纬度 center(lng,lat)
@@ -205,11 +206,11 @@ def stationArea(center):
 
     #四边形，矩形框，站点坐标为中心，爬取范围的算法确定，未检验？？ TODO
     lng_min, lng_max = lng_center - lng_range, lng_center + lng_range
-  
+
     lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
     # construct a list:[min,max] , not tuple:(lng_min, lat_min, lng_max, lat_max)
-    sa = [lng_min, lat_min, lng_max, lat_max]
-    
+    sa = (lng_min, lat_min, lng_max, lat_max)
+
     return sa
 
 def stationList(infile):
@@ -220,18 +221,20 @@ def stationList(infile):
     output: station_name, min_longitude, max_longitude, min_latitude,max_latitude
     from stations_wgs.cvs to station_rect_list
     """
-    
+
     file_input = open(infile, mode='r')
 
     station_rectlist = []   # inital local variable station_list
-    for one_line in file_input:  # why I change 'line' to 'one_line'?? TODO
-       # line = line.strip()
-       # line = line.split(',')
-        line = one_line.strip().split(',')
-        
-        if (line[0] == '') or (line[1] =='') or (line[2] ==''):
+    for one_line in file_input:
+        line = one_line.strip().split(',')  # 按照分隔符, 分解数据成list
+        station_name = line[0]
+        station_center = (line[1],line[2])
+        if (station_name == '') or (line[1] =='') or (line[2] ==''):
             continue
-        
+
+        # get station Rectangle
+        station_rectangle = stationArea(station_center)
+        """
         #中心经纬度，站点名称
         delta = math.pi*2*6371/360
         lng_center, lat_center = float(line[1]), float(line[2])
@@ -241,23 +244,22 @@ def stationList(infile):
 
         #四边形，矩形框，站点坐标为中心，爬取算法范围的确定算法，未检验？？ TODO
         lng_min, lng_max = lng_center - lng_range, lng_center + lng_range
-      
-        lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
 
+        lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
+        """
         #获取spyder_list
-        station_rectlist.append([line[0],round(lng_min,5),round(lng_max,5),round(lat_min,5),round(lat_max,5)])
-    
+        station_rectlist.append([station_name , round(station_rectangle[0],5),
+                  round(station_rectangle[2],5),round(station_rectangle[1],5),
+                  round(station_rectangle[3],5)])
+
     file_input.close()
     return station_rectlist
 
-    
+
 if __name__ == "__main__":
     
-    
-    
     spyder_list = stationList(wgs_infile)
-    
-    Crawl_GStation(spyder_list)    
-    
+
+    Crawl_GStation(spyder_list)
+
     print("Good, Game Over")
-    
