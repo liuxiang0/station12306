@@ -10,7 +10,7 @@ import time
 import os
 import settings
 import transCoordinateSystem
-import sys
+# import sys
 import math
 
 global i_qqlimit    #one QQ crawl maxium cities 
@@ -27,7 +27,7 @@ qq_number_sides = 0
 point_total = 0
 
 my_working_path = "D:\\working\\easygo"
-
+wgs_infile = my_working_path + '\\stations_wgs.csv'
 
 #创建一个异常类，用于在cookie失效时抛出异常
 class CookieException(Exception):
@@ -63,7 +63,7 @@ def Crawl_GStation(spyder_list):
                 cookie = get_cookie(qq_number_sides)
                 qq_number_sides += 1
                 i_qqlimit = 1
-                print("main: 换号了")
+                print("Crawl: 换号了")
 
             place = item[0]
             print(place)
@@ -75,7 +75,7 @@ def Crawl_GStation(spyder_list):
                 text = spyder(cookie, params)
                 save(text, time_now_str, file_name= path_file + place + time_now_str+".csv")
             except CookieException as e:
-                print("main: CookieExcepton启动")
+                print("Crawl: CookieExcepton启动")
                 cookie = get_cookie(qq_number_sides)
                 qq_number_sides += 1
                 text = spyder(cookie, params)
@@ -193,8 +193,7 @@ def stationArea(center):
     """
     input: center (lng, lat)  --->tuple or list
     output: center_area(lng_min,lat_min,lng_max,lat_max) --->  RectangleArea
-            OR center_area(center, radius) --->   CircleArea
-            
+                        
     """
     #import math
     #中心经纬度 center(lng,lat)
@@ -204,7 +203,7 @@ def stationArea(center):
     lng_range = 0.5/(delta*math.cos(lat_center/180*math.pi))
     lat_range = 0.5/delta
 
-    #四边形，矩形框，站点坐标为中心，爬取算法范围的确定算法，未检验？？ TODO
+    #四边形，矩形框，站点坐标为中心，爬取范围的算法确定，未检验？？ TODO
     lng_min, lng_max = lng_center - lng_range, lng_center + lng_range
   
     lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
@@ -213,7 +212,7 @@ def stationArea(center):
     
     return sa
 
-def stationList():
+def stationList(infile):
     """
     get station name, station area (rectangle) list
     such as :  [[上海虹桥，最小经度，最大经度，最小纬度，最大纬度],[北京南，...],...]
@@ -221,8 +220,8 @@ def stationList():
     output: station_name, min_longitude, max_longitude, min_latitude,max_latitude
     from stations_wgs.cvs to station_rect_list
     """
-    wgs_infile = my_working_path + '\\stations_wgs.csv'
-    file_input = open(wgs_infile, mode='r')
+    
+    file_input = open(infile, mode='r')
 
     station_rectlist = []   # inital local variable station_list
     for one_line in file_input:  # why I change 'line' to 'one_line'?? TODO
@@ -254,7 +253,9 @@ def stationList():
     
 if __name__ == "__main__":
     
-    spyder_list = stationList()
+    
+    
+    spyder_list = stationList(wgs_infile)
     
     Crawl_GStation(spyder_list)    
     
