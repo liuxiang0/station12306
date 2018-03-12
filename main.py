@@ -13,17 +13,12 @@ import transCoordinateSystem
 # import sys
 import math
 
-global i_qqlimit    #one QQ crawl maxium cities
-global qq_number_sides  # QQ list
+#global i_qqlimit    #one QQ crawl maxium cities
+#global qq_number_sides  # QQ list
 global point_total      # population at the city
 #global spyder_list       save city coordinate and city name
 global my_working_path  # my working directory
-#global run_time          start running time
-#global station_output_fname  output data file name appending running time
-#global file_output       output data file handler
 
-i_qqlimit = 1
-qq_number_sides = 0
 point_total = 0
 
 my_working_path = "D:\\working\\easygo"
@@ -36,61 +31,73 @@ class CookieException(Exception):
 
 def Crawl_GStation(spyder_list):
     """爬虫主程序，负责控制时间抓取"""
-    while True:
-        global i_qqlimit
-        global qq_number_sides
-        global point_total
+    #while True:
+    #global i_qqlimit
+    #global qq_number_sides
+    global point_total
 
+    i_qqlimit = 1
+    qq_number_sides = 0
+    cookie = get_cookie(qq_number_sides)
 
-        cookie = get_cookie(qq_number_sides)
+    run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
+    #sp means station_people
+    station_output_fname = my_working_path +'\\sp_'+run_time+'.csv'
+    file_output = open(station_output_fname, 'w')  # open data file for writing, error for encoding = "utf-8"
+    file_output.write('站名,相对人数,时间\n')   # writing first line to output file
+    file_path = my_working_path + '\\data_' + run_time + "\\"
 
-        run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
-        station_output_fname = my_working_path +'\\sp_'+run_time+'.csv'
-        file_output = open(station_output_fname, 'w')  # open data file for writing, error for encoding = "utf-8"
-        file_output.write('站名,相对人数,时间\n')   # writing first line to output file
-        path_file = my_working_path + '\\data_' + run_time
+    if not os.path.exists(file_path):
+        os.mkdir(file_path)
 
-        if not os.path.exists(path_file):
-            os.mkdir(path_file)
+    #path_file = path_file + '\\'
+    
+    # print test data into log_file( 将测试数据输出到 log文件中)
+    log_file = my_working_path +'\\sp_'+run_time+'.log'
+    log_output = open(log_file, 'w')
 
-        path_file = path_file + '\\'
+    for item in spyder_list:
 
-        for item in spyder_list:
+        #print("此轮抓取开始")
 
-            #print("此轮抓取开始")
+        """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
+        if i_qqlimit % settings.fre == 0:
+            cookie = get_cookie(qq_number_sides)
+            qq_number_sides += 1
+            i_qqlimit = 1
+            print("Crawl: 换号了")
+            log_output.write("Crawl: 换号了"+'\n')
 
-            """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
-            if i_qqlimit % settings.fre == 0:
-                cookie = get_cookie(qq_number_sides)
-                qq_number_sides += 1
-                i_qqlimit = 1
-                print("Crawl: 换号了")
+        place = item[0]
+        
+        params = spyder_params(item)
+        time_now = time.time()
+        time_now_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time_now))
+        
+        #print(place)
+        log_output.write(place+','+time_now_str+'\n')
+        
+        try:
+            text = spyder(cookie, params)
+            save(text, time_now_str, file_name= file_path + place + time_now_str+".csv")
+        except CookieException as e:
+            print("Crawl: CookieExcepton启动")
+            log_output.write("Crawl: CookieExcepton启动"+'\n')
+            cookie = get_cookie(qq_number_sides)
+            qq_number_sides += 1
+            text = spyder(cookie, params)
+            save(text, time_now_str, file_name= file_path + place + time_now_str+".csv")
+        # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
+        i_qqlimit += 1
 
-            place = item[0]
-            print(place)
-            params = spyder_params(item)
-            time_now = time.time()
-            time_now_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time_now))
+        #print("此轮抓取完成")
 
-            try:
-                text = spyder(cookie, params)
-                save(text, time_now_str, file_name= path_file + place + time_now_str+".csv")
-            except CookieException as e:
-                print("Crawl: CookieExcepton启动")
-                cookie = get_cookie(qq_number_sides)
-                qq_number_sides += 1
-                text = spyder(cookie, params)
-                save(text, time_now_str, file_name= path_file + place + time_now_str+".csv")
-            # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
-            i_qqlimit += 1
+        file_output.write(place+ ','+ str(point_total)+ ','+ time_now_str +'\n')
+        point_total = 0
 
-            #print("此轮抓取完成")
-
-            file_output.write(place+ ','+ str(point_total)+ ','+ time_now_str +'\n')
-            point_total = 0
-
-        file_output.close()   # close output file
-        break
+    file_output.close()   # close output file
+    log_output.close()
+        #break
 
 
 def get_cookie(num):

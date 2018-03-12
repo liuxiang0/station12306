@@ -29,5 +29,8 @@ qq_list = [["2402255768","wode123456"],["2385456274","wode123456"],
 
 #["1276881424","huanyin2018"]]
 #["3133794419","huanyin2018"],["2152284058","huanyin2018"],  
-fre = 105
+fre = 125
 
+#if __name__ == "test":
+#print(crawl_hour, qq_list)
+    
