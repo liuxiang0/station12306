@@ -2,6 +2,7 @@
 # coding: utf-8
 # __author__ = "Brady Hu"
 # __date__ = 2017/10/16 16:11
+# __modify__ = "Liu Zilong" 2018/3
 
 from selenium import webdriver
 import requests
@@ -10,17 +11,12 @@ import time
 import os
 import settings
 import transCoordinateSystem
-# import sys
 import math
 
-#global i_qqlimit    #one QQ crawl maxium cities
-#global qq_number_sides  # QQ list
 global point_total      # population at the city
-#global spyder_list       save city coordinate and city name
 global my_working_path  # my working directory
 
 point_total = 0
-
 my_working_path = "D:\\working\\easygo"
 wgs_infile = my_working_path + '\\stations_wgs.csv'
 
@@ -31,9 +27,6 @@ class CookieException(Exception):
 
 def Crawl_GStation(spyder_list):
     """爬虫主程序，负责控制时间抓取"""
-    #while True:
-    #global i_qqlimit
-    #global qq_number_sides
     global point_total
 
     i_qqlimit = 1
@@ -49,9 +42,7 @@ def Crawl_GStation(spyder_list):
 
     if not os.path.exists(file_path):
         os.mkdir(file_path)
-
-    #path_file = path_file + '\\'
-    
+        
     # print test data into log_file( 将测试数据输出到 log文件中)
     log_file = my_working_path +'\\sp_'+run_time+'.log'
     log_output = open(log_file, 'w')
@@ -74,8 +65,8 @@ def Crawl_GStation(spyder_list):
         time_now = time.time()
         time_now_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time_now))
         
-        #print(place)
-        log_output.write(place+','+time_now_str+'\n')
+        print(place)  # print station name
+        log_output.write(place+' , ' + time_now_str + '\n')
         
         try:
             text = spyder(cookie, params)
@@ -96,9 +87,7 @@ def Crawl_GStation(spyder_list):
         point_total = 0
 
     file_output.close()   # close output file
-    log_output.close()
-        #break
-
+    log_output.close()    # close log file
 
 def get_cookie(num):
     """负责根据传入的qq号位次，获得对应的cookie并返回，以便用于爬虫"""
@@ -168,6 +157,8 @@ def save(text, time_now,file_name):
     except FileNotFoundError as e:
         with open(file_name, mode='w', encoding='utf-8') as f:
             f.write('count,wgs_lng,wgs_lat,time\n')
+    finally:
+        f.close()
     #写入数据, append
     with open(file_name, mode="a", encoding="utf-8") as f:
         node_list = json.loads(text)["data"]
@@ -203,7 +194,6 @@ def stationArea(center):
     output: center_area(lng_min,lat_min,lng_max,lat_max) --->  RectangleArea
 
     """
-    #import math
     #中心经纬度 center(lng,lat)
     delta = math.pi*2*6371/360
     lng_center, lat_center = float(center[0]), float(center[1])
@@ -241,19 +231,7 @@ def stationList(infile):
 
         # get station Rectangle
         station_rectangle = stationArea(station_center)
-        """
-        #中心经纬度，站点名称
-        delta = math.pi*2*6371/360
-        lng_center, lat_center = float(line[1]), float(line[2])
 
-        lng_range = 0.5/(delta*math.cos(lat_center/180*math.pi))
-        lat_range = 0.5/delta
-
-        #四边形，矩形框，站点坐标为中心，爬取算法范围的确定算法，未检验？？ TODO
-        lng_min, lng_max = lng_center - lng_range, lng_center + lng_range
-
-        lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
-        """
         #获取spyder_list
         station_rectlist.append([station_name , round(station_rectangle[0],5),
                   round(station_rectangle[2],5),round(station_rectangle[1],5),
