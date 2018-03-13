@@ -30,8 +30,8 @@ def Crawl_GStation(spyder_list):
     global point_total
 
     i_qqlimit = 1
-    qq_number_sides = 0
-    cookie = get_cookie(qq_number_sides)
+    qq_index = 0
+    cookie = get_cookie(qq_index)
 
     run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
     #sp means station_people
@@ -46,18 +46,23 @@ def Crawl_GStation(spyder_list):
     # print test data into log_file( 将测试数据输出到 log文件中)
     log_file = my_working_path +'\\sp_'+run_time+'.log'
     log_output = open(log_file, 'w')
-
+    print("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
+    log_output.write("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
+    
     for item in spyder_list:
 
         #print("此轮抓取开始")
 
         """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
         if i_qqlimit % settings.fre == 0:
-            cookie = get_cookie(qq_number_sides)
-            qq_number_sides += 1
+            cookie = get_cookie(qq_index)
+            qq_index += 1
             i_qqlimit = 1
-            print("Crawl: 换号了")
-            log_output.write("Crawl: 换号了"+'\n')
+            # 解析QQ号码，QQ[%d] = %s " % (i,qq_list[i][0])
+            print("Crawl: 超限换QQ号, QQ[%d] = %s " % 
+                  (qq_index, settings.qq_list[qq_index][0]))
+            log_output.write("Crawl: 超限换号, QQ[%d] = %s\n" % 
+                             (qq_index, settings.qq_list[qq_index][0]))
 
         place = item[0]
         
@@ -74,8 +79,12 @@ def Crawl_GStation(spyder_list):
         except CookieException as e:
             print("Crawl: CookieExcepton启动")
             log_output.write("Crawl: CookieExcepton启动"+'\n')
-            cookie = get_cookie(qq_number_sides)
-            qq_number_sides += 1
+            cookie = get_cookie(qq_index)
+            qq_index += 1
+            print("Crawl: 出错换QQ号, QQ[%d] = %s " % 
+                  (qq_index, settings.qq_list[qq_index][0]))
+            log_output.write("Crawl: 出错换号, QQ[%d] = %s\n" % 
+                             (qq_index, settings.qq_list[qq_index][0]))
             text = spyder(cookie, params)
             save(text, time_now_str, file_name= file_path + place + time_now_str+".csv")
         # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
