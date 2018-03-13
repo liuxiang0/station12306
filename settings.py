@@ -32,5 +32,7 @@ qq_list = [["2402255768","wode123456"],["2385456274","wode123456"],
 fre = 125
 
 if __name__ == "__main__":
-    print(crawl_hour, qq_list)
+    print("Hour=%d, QQ List= %s " % (crawl_hour, qq_list))
+    for i in range(4):
+        print("QQ[%d] = %s " % (i,qq_list[i][0]))
     
