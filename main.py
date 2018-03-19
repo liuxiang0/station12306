@@ -30,8 +30,7 @@ def Crawl_GStation(spyder_list):
     global point_total
 
     i_qqlimit = 1
-    qq_index = 0
-    cookie = get_cookie(qq_index)
+    
 
     run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
     #sp means station_people
@@ -46,6 +45,9 @@ def Crawl_GStation(spyder_list):
     # print test data into log_file( 将测试数据输出到 log文件中)
     log_file = my_working_path +'\\sp_'+run_time+'.log'
     log_output = open(log_file, 'w')
+    
+    qq_index = 0   #第一个QQ号开始抓取
+    cookie = get_cookie(qq_index)
     print("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
     log_output.write("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
     
@@ -54,39 +56,45 @@ def Crawl_GStation(spyder_list):
         #print("此轮抓取开始")
 
         """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
-        if i_qqlimit % settings.fre == 0:
-            cookie = get_cookie(qq_index)
-            qq_index += 1
+        if i_qqlimit > settings.fre :  # % settings.fre == 0:
+            qq_index += 1  # 换QQ号码
             i_qqlimit = 1
+            cookie = get_cookie(qq_index)            
             # 解析QQ号码，QQ[%d] = %s " % (i,qq_list[i][0])
-            print("Crawl: 超限换QQ号, QQ[%d] = %s " % 
+            print("Crawl: 超限换号, QQ[%d] = %s \n" % 
                   (qq_index, settings.qq_list[qq_index][0]))
             log_output.write("Crawl: 超限换号, QQ[%d] = %s\n" % 
                              (qq_index, settings.qq_list[qq_index][0]))
-
-        place = item[0]
         
-        params = spyder_params(item)
-        time_now = time.time()
-        time_now_str = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time_now))
+        place = item[0]  # station name
+        params = spyder_params(item)  # 表单数据
         
-        print(place)  # print station name
-        log_output.write(place+' , ' + time_now_str + '\n')
+        time_now_str = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())
+        
+        print(place)  # print station name for testing
+        log_output.write(place + ' , ' + time_now_str + '\n')
+        city_file_name= file_path + place + time_now_str+".csv"
         
         try:
-            text = spyder(cookie, params)
-            save(text, time_now_str, file_name= file_path + place + time_now_str+".csv")
+            text = spyder(cookie, params)  # crawl the station from cookie and params
+            save(text, time_now_str, city_file_name) #save crawing data to city_file_name
+
         except CookieException as e:
-            print("Crawl: CookieExcepton启动")
-            log_output.write("Crawl: CookieExcepton启动"+'\n')
-            cookie = get_cookie(qq_index)
-            qq_index += 1
-            print("Crawl: 出错换QQ号, QQ[%d] = %s " % 
+            print("Crawl: CookieExcepton启动, 出错时QQ[%d] = %s\n" % 
                   (qq_index, settings.qq_list[qq_index][0]))
-            log_output.write("Crawl: 出错换号, QQ[%d] = %s\n" % 
+            log_output.write("Crawl: CookieExcepton启动, 出错时QQ[%d] = %s \n" % 
+                  (qq_index, settings.qq_list[qq_index][0]))
+            # ignore CookieException 
+            """qq_index += 1
+            cookie = get_cookie(qq_index)
+            
+            print("Crawl: Cookie出错换号, 新QQ[%d] = %s\n " % 
+                  (qq_index, settings.qq_list[qq_index][0]))
+            log_output.write("Crawl: Cookie出错换号, 新QQ[%d] = %s\n" % 
                              (qq_index, settings.qq_list[qq_index][0]))
             text = spyder(cookie, params)
-            save(text, time_now_str, file_name= file_path + place + time_now_str+".csv")
+            save(text, time_now_str,city_file_name) #= file_path + place + time_now_str+".csv")
+            """
         # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
         i_qqlimit += 1
 
@@ -97,6 +105,7 @@ def Crawl_GStation(spyder_list):
 
     file_output.close()   # close output file
     log_output.close()    # close log file
+    
 
 def get_cookie(num):
     """负责根据传入的qq号位次，获得对应的cookie并返回，以便用于爬虫"""
@@ -136,6 +145,7 @@ def spyder(user_cookie, params):
             print("spyder func Exception:",e.args)
         break
 
+
 def spyder_params(item):
     """将传入的块转化为网页所需的表单"""
     station,lng_mini,lng_maxi,lat_mini,lat_maxi = item
@@ -152,24 +162,26 @@ def spyder_params(item):
                 "lat": lat,
                 "lng": lng,
                 "_token": ""}
-
+    # TODO city="%E6%88%90%E9%83%BD"=?  (unicode) 
+    # left-upper  and right-down corner
     return params
+
 
 def save(text, time_now,file_name):
     """将抓取下来的流数据处理保存到文本文件"""
     global point_total
 
-    #判断文件是否存在，若不存在则创建文件并写入头
+    #判断文件是否存在，若不存在则创建文件并写入头行
     try:
         with open(file_name, mode='r') as f:
             f.readline()
     except FileNotFoundError as e:
-        with open(file_name, mode='w', encoding='utf-8') as f:
+        with open(file_name, mode='w') as f:
             f.write('count,wgs_lng,wgs_lat,time\n')
     finally:
         f.close()
-    #写入数据, append
-    with open(file_name, mode="a", encoding="utf-8") as f:
+    #写入数据, append, encoding="utf-8"
+    with open(file_name, mode="a") as f:
         node_list = json.loads(text)["data"]
         try:
             min_count = node_list[0]["count"]
@@ -185,18 +197,23 @@ def save(text, time_now,file_name):
                 point_total += i['count']
                 f.write(str(i['count'])+","+str(lng)+","+str(lat)+","+time_now+"\n")
         except IndexError as e:
-            #print("Save1 IndexError: 此区域没有点信息",)  # Test is ok
+            #print("Save1 IndexError: 此区域没有点信息")  
             pass
 
         except TypeError as e:
-            print("save2 TypeError: ", node_list)
+            print("saveProc TypeError:(text=%s, node=%s) " % (str(text), node_list))
+            f.write("saveProc TypeError:(text=%s, node=%s) " % (str(text), node_list))
             """
             save:  http://ui.ptlogin2.qq.com/cgi-bin/login?appid=1600000601&style=9&s_url=http%3A%2F%2Fc.easygo.qq.com%2Feg_toc%2Fmap.html
             """
             raise CookieException
             """如果同一个QQ号在一天内频繁登陆，则报错：
-            该用户访问次数过多,CookieExcepton启动,该用户访问次数过多
+            该用户访问次数过多,CookieExcepton启动,该用户访问次数过多,操作太频繁，明天试一试！
             """
+        finally:
+            f.close()   # close file, write end flag to file
+        
+
 def stationArea(center):
     """
     input: center (lng, lat)  --->tuple or list
@@ -218,6 +235,7 @@ def stationArea(center):
     sa = (lng_min, lat_min, lng_max, lat_max)
 
     return sa
+
 
 def stationList(infile):
     """
