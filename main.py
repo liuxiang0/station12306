@@ -25,12 +25,10 @@ class CookieException(Exception):
     def __init__(self):
         Exception.__init__(self)
 
+
 def Crawl_GStation(spyder_list):
     """爬虫主程序，负责控制时间抓取"""
     global point_total
-
-    i_qqlimit = 1
-    
 
     run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
     #sp means station_people
@@ -51,14 +49,18 @@ def Crawl_GStation(spyder_list):
     print("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
     log_output.write("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
     
-    for item in spyder_list:
-
-        #print("此轮抓取开始")
-
-        """这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次"""
-        if i_qqlimit > settings.fre :  # % settings.fre == 0:
+    #for item in spyder_list:
+    for i in range(len(spyder_list)):
+        
+        # item 保留了高铁名称，矩形范围。        
+        station_area = spyder_list[i]
+        
+        """
+        # 这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次
+        # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
+        """
+        if (i+1) % settings.fre == 0:
             qq_index += 1  # 换QQ号码
-            i_qqlimit = 1
             cookie = get_cookie(qq_index)            
             # 解析QQ号码，QQ[%d] = %s " % (i,qq_list[i][0])
             print("Crawl: 超限换号, QQ[%d] = %s \n" % 
@@ -66,13 +68,13 @@ def Crawl_GStation(spyder_list):
             log_output.write("Crawl: 超限换号, QQ[%d] = %s\n" % 
                              (qq_index, settings.qq_list[qq_index][0]))
         
-        place = item[0]  # station name
-        params = spyder_params(item)  # 表单数据
+        place = station_area[0]  # station name
+        params = spyder_params(station_area)  # 表单数据
         
         time_now_str = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())
         
-        print(place)  # print station name for testing
-        log_output.write(place + ' , ' + time_now_str + '\n')
+        print(str(i+1) + '.' + place)  # print station name for testing
+        log_output.write("%d. %s, %s \n" % (i+1, place, time_now_str))
         city_file_name= file_path + place + time_now_str+".csv"
         
         try:
@@ -85,20 +87,6 @@ def Crawl_GStation(spyder_list):
             log_output.write("Crawl: CookieExcepton启动, 出错时QQ[%d] = %s \n" % 
                   (qq_index, settings.qq_list[qq_index][0]))
             # ignore CookieException 
-            """qq_index += 1
-            cookie = get_cookie(qq_index)
-            
-            print("Crawl: Cookie出错换号, 新QQ[%d] = %s\n " % 
-                  (qq_index, settings.qq_list[qq_index][0]))
-            log_output.write("Crawl: Cookie出错换号, 新QQ[%d] = %s\n" % 
-                             (qq_index, settings.qq_list[qq_index][0]))
-            text = spyder(cookie, params)
-            save(text, time_now_str,city_file_name) #= file_path + place + time_now_str+".csv")
-            """
-        # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
-        i_qqlimit += 1
-
-        #print("此轮抓取完成")
 
         file_output.write(place+ ','+ str(point_total)+ ','+ time_now_str +'\n')
         point_total = 0
