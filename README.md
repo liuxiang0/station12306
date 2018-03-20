@@ -9,3 +9,6 @@ settings.py
 parameters settings used by main.py
 
 transCoordinateSystem.py
+
+parse_station.py
+爬取12306.cn网站的所有铁路站名称（NAME）和代码（编码CODE）
