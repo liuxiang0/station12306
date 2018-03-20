@@ -11,6 +11,10 @@ crawl_hour = int(time.strftime("%H"))  # get HOURS
 #爬取的间隔时间
 sleeptime = 3600 #单位是秒，7200秒即为2小时, 似乎没有用到？ TODO
 
+# define running environment varibales
+working_path = "D:\\working\\easygo"
+wgs84_file     = "D:\\working\\easygo\\stations_wgs.csv"
+
 # 分时段取不同的QQ List，防止一个号爬取到上限。
 if crawl_hour < 12:
     qq_list = [["2371683532","wode123456"],["2374217858","wode123456"],

@@ -12,13 +12,14 @@ import os
 import settings
 import transCoordinateSystem
 import math
+import sys
 
 global point_total      # population at the city
 global my_working_path  # my working directory
 
 point_total = 0
-my_working_path = "D:\\working\\easygo"
-wgs_infile = my_working_path + '\\stations_wgs.csv'
+my_working_path = settings.working_path
+
 
 #创建一个异常类，用于在cookie失效时抛出异常
 class CookieException(Exception):
@@ -27,12 +28,18 @@ class CookieException(Exception):
 
 
 def Crawl_GStation(spyder_list):
-    """爬虫主程序，负责控制时间抓取"""
+    """
+    #爬虫主程序，负责控制时间，判断抓取高铁站数量，输出每个高铁站详细数据。
+    # 两重循环，外循环是遍历高铁站列表，内循环（不能算循环）是判断数量是否超过
+    # 网站设置的上限，如果超过，就改换QQ号，继续登录爬取。
+    """
     global point_total
+    
 
     run_time = time.strftime("%Y%m%d_%H%M%S",time.localtime())
     #sp means station_people
     station_output_fname = my_working_path +'\\sp_'+run_time+'.csv'
+
     file_output = open(station_output_fname, 'w')  # open data file for writing, error for encoding = "utf-8"
     file_output.write('站名,相对人数,时间\n')   # writing first line to output file
     file_path = my_working_path + '\\data_' + run_time + "\\"
@@ -44,32 +51,27 @@ def Crawl_GStation(spyder_list):
     log_file = my_working_path +'\\sp_'+run_time+'.log'
     log_output = open(log_file, 'w')
     
-    qq_index = 0   #第一个QQ号开始抓取
-    cookie = get_cookie(qq_index)
-    print("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
-    log_output.write("Crawl: QQ[%d] = %s\n" % (qq_index, settings.qq_list[qq_index][0]))
+    qq_index = -1   #第一个QQ号序号从0开始抓取
     
-    #for item in spyder_list:
-    for i in range(len(spyder_list)):
-        
-        # item 保留了高铁名称，矩形范围。        
-        station_area = spyder_list[i]
-        
+    #for station_area in spyder_list:
+    
+    for i, station_area in enumerate(spyder_list):    
         """
         # 这部分负责每个qq号码抓取的次数，不能超过settings.fre(缺省设置为100) 次
         # 同一个qq号，做完一个城市，计数加1. 避免超过系统限制最大值
+        station_area = spyder_list[i], 保留了高铁名称，及其抓取覆盖矩形范围。 
         """
-        if (i+1) % settings.fre == 0:
+        if i % settings.fre == 0:
             qq_index += 1  # 换QQ号码
             cookie = get_cookie(qq_index)            
-            # 解析QQ号码，QQ[%d] = %s " % (i,qq_list[i][0])
-            print("Crawl: 超限换号, QQ[%d] = %s \n" % 
+            # 解析QQ号码 
+            print("Crawl: QQ[%d]=%s\n" % 
                   (qq_index, settings.qq_list[qq_index][0]))
-            log_output.write("Crawl: 超限换号, QQ[%d] = %s\n" % 
+            log_output.write("Crawl: QQ[%d]=%s\n" % 
                              (qq_index, settings.qq_list[qq_index][0]))
         
-        place = station_area[0]  # station name
-        params = spyder_params(station_area)  # 表单数据
+        place = station_area[0]                 # station name
+        params = spyder_params(station_area)    # 表单数据
         
         time_now_str = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())
         
@@ -80,15 +82,15 @@ def Crawl_GStation(spyder_list):
         try:
             text = spyder(cookie, params)  # crawl the station from cookie and params
             save(text, time_now_str, city_file_name) #save crawing data to city_file_name
-
         except CookieException as e:
-            print("Crawl: CookieExcepton启动, 出错时QQ[%d] = %s\n" % 
+            print("Crawl: CookieExcepton启动, 出错QQ[%d]=%s\n" % 
                   (qq_index, settings.qq_list[qq_index][0]))
-            log_output.write("Crawl: CookieExcepton启动, 出错时QQ[%d] = %s \n" % 
-                  (qq_index, settings.qq_list[qq_index][0]))
+            log_output.write("Crawl: CookieExcepton启动, 出错QQ[%d]=%s\n" % 
+                             (qq_index, settings.qq_list[qq_index][0]))
             # ignore CookieException 
 
         file_output.write(place+ ','+ str(point_total)+ ','+ time_now_str +'\n')
+        # 数字归零，换高铁站名
         point_total = 0
 
     file_output.close()   # close output file
@@ -258,6 +260,17 @@ def stationList(infile):
 
 if __name__ == "__main__":
     
+    if not os.path.exists(my_working_path):
+        os.mkdir(my_working_path)
+        print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path )
+        sys.exit()
+    
+    wgs_infile = settings.wgs84_file 
+    if not os.path.exists(wgs_infile):
+        os.mkdir(wgs_infile)
+        print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path )
+        sys.exit()    
+        
     spyder_list = stationList(wgs_infile)
 
     Crawl_GStation(spyder_list)
