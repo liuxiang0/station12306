@@ -261,13 +261,11 @@ def stationList(infile):
 if __name__ == "__main__":
     
     if not os.path.exists(my_working_path):
-        os.mkdir(my_working_path)
-        print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path )
+        print("工作目录 %s 不存在，请核对后再重新运行该程序" % my_working_path )
         sys.exit()
     
     wgs_infile = settings.wgs84_file 
     if not os.path.exists(wgs_infile):
-        os.mkdir(wgs_infile)
         print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path )
         sys.exit()    
         
