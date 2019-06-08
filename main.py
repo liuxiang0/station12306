@@ -9,7 +9,7 @@ import requests
 import json
 import time
 import os
-import settings
+import settings  # 调用配置文件中的参数设置
 import transCoordinateSystem
 import math
 import sys
@@ -198,7 +198,7 @@ def save(text, time_now,file_name):
             """
             raise CookieException
             """如果同一个QQ号在一天内频繁登陆，则报错：
-            该用户访问次数过多,CookieExcepton启动,该用户访问次数过多,操作太频繁，明天试一试！
+            该用户访问次数过多, CookieExcepton启动,该用户访问次数过多, 操作太频繁，明天试一试！
             """
         finally:
             f.close()   # close file, write end flag to file
@@ -217,7 +217,7 @@ def stationArea(center):
     lng_range = 0.5/(delta*math.cos(lat_center/180*math.pi))
     lat_range = 0.5/delta
 
-    #四边形，矩形框，站点坐标为中心，爬取范围的算法确定，未检验？？ TODO
+    # 四边形，矩形框，站点坐标为中心，爬取范围的算法确定，未检验？？ TODO
     lng_min, lng_max = lng_center - lng_range, lng_center + lng_range
 
     lat_min, lat_max = lat_center - lat_range, lat_center + lat_range
@@ -242,17 +242,17 @@ def stationList(infile):
     for one_line in file_input:
         line = one_line.strip().split(',')  # 按照分隔符, 分解数据成list
         station_name = line[0]
-        station_center = (line[1],line[2])
+        station_center = (line[1], line[2])
         if (station_name == '') or (line[1] =='') or (line[2] ==''):
             continue
 
         # get station Rectangle
         station_rectangle = stationArea(station_center)
 
-        #获取spyder_list
-        station_rectlist.append([station_name , round(station_rectangle[0],5),
-                  round(station_rectangle[2],5),round(station_rectangle[1],5),
-                  round(station_rectangle[3],5)])
+        # 获取spyder_list
+        station_rectlist.append([station_name, round(station_rectangle[0], 5),
+                  round(station_rectangle[2], 5), round(station_rectangle[1], 5),
+                  round(station_rectangle[3], 5)])
 
     file_input.close()
     return station_rectlist
@@ -261,12 +261,12 @@ def stationList(infile):
 if __name__ == "__main__":
     
     if not os.path.exists(my_working_path):
-        print("工作目录 %s 不存在，请核对后再重新运行该程序" % my_working_path )
+        print("工作目录 %s 不存在，请核对后再重新运行该程序" % my_working_path)
         sys.exit()
     
     wgs_infile = settings.wgs84_file 
     if not os.path.exists(wgs_infile):
-        print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path )
+        print("请将高铁坐标文件stations_wgs.csv放入此目录%s，并重新运行该程序" % my_working_path)
         sys.exit()    
         
     spyder_list = stationList(wgs_infile)
